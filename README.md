@@ -10,7 +10,7 @@ Production: https://www.zedmusic.online
 | Phase | Scope | Status |
 |---|---|---|
 | 1 Foundation | Architecture, design system, full DB schema + migrations, auth (email/password, verification, reset, Google), RBAC, app shell, charts/legal pages, PWA manifest, SEO, tests, CI | ✅ |
-| 2 Listener & artist experience | Artist profiles, presigned uploads, catalogue, search, persistent player | ⏳ |
+| 2 Listener & artist experience | Artist studio & claims, presigned uploads with server-side inspection, review queue, catalogue pages, search, persistent player, likes/follows/playlists | ✅ |
 | 3 Analytics | Play sessions, qualification, aggregation, artist dashboards | ⏳ |
 | 4 Charts | Chart engine, review/publish, history | ⏳ |
 | 5 External integrations | YouTube, CSV/distributor imports, verification | ⏳ |
@@ -29,6 +29,14 @@ npm run dev
 ```
 
 Without `RESEND_API_KEY`, emails (verification links, password resets) are printed to the server console in development.
+
+Without R2 credentials, development uses a **local storage driver** (`.data/storage`, served by `/api/dev-storage` with signed URLs and Range support), so uploads and playback work offline. It is disabled in production.
+
+Optional demo catalogue (synthesised tones, labelled "Demo", flagged `is_demo`, local only):
+
+```bash
+ALLOW_DEMO_DATA=true npm run db:seed -- --demo
+```
 
 Make yourself an admin after signing up and confirming your email:
 

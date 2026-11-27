@@ -1,15 +1,22 @@
 import { BarChart3, ShieldCheck, Upload, LineChart, Headphones, Trophy } from "lucide-react";
 import Link from "next/link";
+import { ArtistGrid, ReleaseRow, SectionHeader as CatalogHeader } from "@/components/catalog/cards";
+import { TrackList } from "@/components/catalog/track-list";
 import { ChartList } from "@/components/charts/chart-list";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, EmptyState } from "@/components/ui/primitives";
+import { getNewReleases, getRecentTracks, listArtists } from "@/lib/data/catalog";
 import { getActiveGenres, getLatestPublishedChart } from "@/lib/data/public";
 
 export default function HomePage() {
   return (
     <div className="mx-auto grid max-w-6xl gap-14">
       <Hero />
+      <NewReleasesSection />
       <TopTenSection />
+      <RecentTracksSection />
+      <ArtistsRow title="Featured artists" eyebrow="Spotlight" verifiedFirst />
+      <ArtistsRow title="Emerging artists" eyebrow="Ones to watch" emergingOnly />
       <GenresSection />
       <ArtistsSection />
       <TrustSection />
@@ -107,17 +114,51 @@ async function GenresSection() {
       <SectionHeading eyebrow="Explore" title="Sounds of Zambia" />
       <ul className="flex flex-wrap gap-2.5">
         {genres.map((g, i) => (
-          <li
-            key={g.id}
-            className={`rounded-full border border-border px-4 py-2 text-sm font-medium ${
-              i % 3 === 0 ? "bg-primary/10" : i % 3 === 1 ? "bg-accent/10" : "bg-surface-2"
-            }`}
-          >
-            {g.name}
+          <li key={g.id}>
+            <Link
+              href={`/genre/${g.slug}`}
+              className={`inline-flex rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:border-border-strong ${
+                i % 3 === 0 ? "bg-primary/10" : i % 3 === 1 ? "bg-accent/10" : "bg-surface-2"
+              }`}
+            >
+              {g.name}
+            </Link>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-muted">Genre pages open with the music catalogue.</p>
+    </section>
+  );
+}
+
+async function NewReleasesSection() {
+  const releases = await getNewReleases(12);
+  if (releases.length === 0) return null;
+  return (
+    <section aria-label="New releases">
+      <CatalogHeader eyebrow="Just dropped" title="New releases" href="/new-releases" />
+      <ReleaseRow releases={releases} />
+    </section>
+  );
+}
+
+async function RecentTracksSection() {
+  const tracks = await getRecentTracks(8);
+  if (tracks.length === 0) return null;
+  return (
+    <section aria-label="Recently added">
+      <CatalogHeader eyebrow="Fresh on Zed Music" title="Recently added" />
+      <TrackList tracks={tracks} context="home:recent" />
+    </section>
+  );
+}
+
+async function ArtistsRow({ title, eyebrow, verifiedFirst, emergingOnly }: { title: string; eyebrow: string; verifiedFirst?: boolean; emergingOnly?: boolean }) {
+  const artists = await listArtists({ limit: 12, verifiedFirst, emergingOnly });
+  if (artists.length === 0) return null;
+  return (
+    <section aria-label={title}>
+      <CatalogHeader eyebrow={eyebrow} title={title} href="/artists" />
+      <ArtistGrid artists={artists} scroll />
     </section>
   );
 }
@@ -128,7 +169,7 @@ function ArtistsSection() {
       icon: Upload,
       title: "Publish your music",
       body: "Upload singles, EPs and albums with full credits, artwork and lyrics. Every release is reviewed before it goes live.",
-      soon: true,
+      soon: false,
     },
     {
       icon: LineChart,
@@ -162,7 +203,7 @@ function ArtistsSection() {
       </div>
       <div>
         <Button asChild>
-          <Link href="/sign-up">Create your account</Link>
+          <Link href="/studio">Open the artist studio</Link>
         </Button>
       </div>
     </section>

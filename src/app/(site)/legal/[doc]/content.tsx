@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 
+import { UPLOAD_TERMS_VERSION } from "@/lib/legal";
+
 /**
  * Legal documents. DRAFTS — have them reviewed by a Zambian legal practitioner before launch.
  * The upload-terms version string is stored with every music submission.
  */
-export const UPLOAD_TERMS_VERSION = "2026-11-draft-1";
 
 type Doc = { title: string; description: string; body: React.ReactNode };
 

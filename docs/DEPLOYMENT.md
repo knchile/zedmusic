@@ -18,12 +18,21 @@ Order: Neon → Resend → (R2) → Vercel → domain → first admin.
 
 Without email, users cannot confirm their accounts in production.
 
-## 3. Cloudflare R2 (needed from Phase 2)
+## 3. Cloudflare R2 (required for uploads and playback)
 
 1. Create buckets `zedmusic-audio` (private) and `zedmusic-media`.
 2. On `zedmusic-media`, connect custom domain `media.zedmusic.online` (requires the domain's DNS on Cloudflare, or use the R2 public dev URL temporarily).
 3. Create an R2 API token with Object Read & Write on both buckets → `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`; endpoint `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`.
-4. CORS on both buckets: allow `PUT, GET, HEAD` from `https://www.zedmusic.online` (and preview domains), expose `ETag, Content-Length, Content-Range, Accept-Ranges`.
+4. CORS on both buckets (browsers upload directly to R2):
+   ```json
+   [{ "AllowedOrigins": ["https://www.zedmusic.online", "https://zedmusic.online"],
+      "AllowedMethods": ["PUT", "GET", "HEAD"],
+      "AllowedHeaders": ["Content-Type"],
+      "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+      "MaxAgeSeconds": 3600 }]
+   ```
+   Add your Vercel preview domain if you test uploads on previews.
+5. Files that fail inspection are deleted immediately. Uploads that are started but never completed can leave orphaned objects; a cleanup job for these is planned with the scheduled jobs in Phase 3.
 
 ## 4. Vercel
 

@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Admin", robots: { index: false, foll
 
 export default function AdminPage() {
   return (
-    <div className="mx-auto grid max-w-6xl gap-8">
+    <div className="grid gap-8">
       <header className="grid gap-1">
         <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">Administration</p>
         <h1 className="font-display text-3xl font-bold sm:text-4xl">Platform overview</h1>
@@ -107,8 +107,7 @@ async function Overview() {
       </section>
 
       <p className="text-sm text-muted">
-        Review queues, verification, chart management and moderation tools arrive in the following
-        phases.
+        Chart management, fraud review, copyright cases and reports arrive in the following phases.
       </p>
     </div>
   );

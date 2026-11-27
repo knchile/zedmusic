@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { cache } from "react";
 import { getDb, schema } from "@/db";
 import { getAuth } from "@/lib/auth";
@@ -26,7 +27,11 @@ export type CurrentUser = Actor & { name: string; email: string; image: string |
  */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!isConfigured("auth")) return null;
-  const session = await getAuth().api.getSession({ headers: await headers() });
+  // Session validation compares expiry against the clock, so mark this read as
+  // request-time explicitly (Cache Components forbids clock reads while prerendering).
+  const requestHeaders = await headers();
+  await connection();
+  const session = await getAuth().api.getSession({ headers: requestHeaders });
   if (!session) return null;
   const u = session.user as typeof session.user & { role?: string; status?: string };
   const user: CurrentUser = {

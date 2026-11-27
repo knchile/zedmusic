@@ -1,9 +1,10 @@
 "use client";
 
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, Mic2, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { library } from "@/components/social/library-store";
 import { authClient } from "@/lib/auth/client";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
   async function handleSignOut() {
     setSigningOut(true);
     await authClient.signOut();
+    void library.load(true);
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -91,6 +93,9 @@ export function UserMenu({ user }: { user: MenuUser }) {
             <p className="truncate text-xs text-muted">{user.email}</p>
           </div>
           <div className="my-1 h-px bg-border" />
+          <Link role="menuitem" href="/studio" className={itemClass} onClick={() => setOpen(false)}>
+            <Mic2 className="size-4 text-muted" aria-hidden /> Artist studio
+          </Link>
           <Link role="menuitem" href="/account" className={itemClass} onClick={() => setOpen(false)}>
             <Settings className="size-4 text-muted" aria-hidden /> Account settings
           </Link>
