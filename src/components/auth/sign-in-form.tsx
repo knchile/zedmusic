@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, Field, Input } from "@/components/ui/primitives";
+import { library } from "@/components/social/library-store";
 import { authClient } from "@/lib/auth/client";
 import { safeRedirectPath } from "@/lib/utils";
 import { GoogleButton, OrDivider } from "./google-button";
@@ -44,6 +45,7 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
       setError("Incorrect email or password.");
       return;
     }
+    void library.load(true);
     router.push(next);
     router.refresh();
   }

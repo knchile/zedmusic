@@ -156,3 +156,33 @@ export function EmptyState({
     </div>
   );
 }
+
+export function Select({ className, ...props }: ComponentProps<"select">) {
+  return (
+    <select
+      className={cn(
+        "h-12 w-full appearance-none rounded-md border border-border bg-surface-2 bg-[length:16px] bg-[right_1rem_center] bg-no-repeat px-4 pr-10 text-base text-foreground sm:text-sm",
+        "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2395a399' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")]",
+        "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Progress({ value, className, label }: { value: number; className?: string; label?: string }) {
+  const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
+  return (
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      aria-label={label}
+      className={cn("h-2 w-full overflow-hidden rounded-full bg-surface-3", className)}
+    >
+      <div className="h-full rounded-full bg-primary transition-[width] duration-200" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}

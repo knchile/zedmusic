@@ -303,7 +303,7 @@ export const uploads = pgTable(
     originalFilename: text().notNull(),
     mimeType: text().notNull(),
     sizeBytes: bigint({ mode: "number" }).notNull(),
-    /** Client-computed SHA-256, re-verified during processing; used for duplicate detection. */
+    /** Client-computed SHA-256 (advisory): used for duplicate detection, not as proof of content. */
     sha256: text(),
     status: uploadStatus().notNull().default("pending"),
     error: text(),

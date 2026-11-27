@@ -10,6 +10,7 @@ const actor = (over: Partial<Actor> = {}): Actor => ({
 });
 
 const allArtistActions: ArtistAction[] = [
+  "artist:view-studio",
   "artist:view-analytics",
   "artist:edit-profile",
   "artist:upload",
@@ -49,7 +50,7 @@ describe("canOnArtist", () => {
 
   it("analysts can only view analytics", () => {
     for (const action of allArtistActions) {
-      expect(canOnArtist(actor(), action, { memberRole: "analyst" })).toBe(action === "artist:view-analytics");
+      expect(canOnArtist(actor(), action, { memberRole: "analyst" })).toBe(action === "artist:view-analytics" || action === "artist:view-studio");
     }
   });
 

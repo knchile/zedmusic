@@ -31,6 +31,7 @@ export type ArtistAccess = {
 };
 
 export type ArtistAction =
+  | "artist:view-studio"
   | "artist:view-analytics"
   | "artist:edit-profile"
   | "artist:upload"
@@ -41,6 +42,7 @@ export type ArtistAction =
 
 const artistMemberGrants: Record<ArtistMemberRole, ArtistAction[]> = {
   owner: [
+    "artist:view-studio",
     "artist:view-analytics",
     "artist:edit-profile",
     "artist:upload",
@@ -50,6 +52,7 @@ const artistMemberGrants: Record<ArtistMemberRole, ArtistAction[]> = {
     "artist:import-reports",
   ],
   manager: [
+    "artist:view-studio",
     "artist:view-analytics",
     "artist:edit-profile",
     "artist:upload",
@@ -57,14 +60,14 @@ const artistMemberGrants: Record<ArtistMemberRole, ArtistAction[]> = {
     "artist:connect-external",
     "artist:import-reports",
   ],
-  editor: ["artist:edit-profile", "artist:upload"],
-  analyst: ["artist:view-analytics"],
+  editor: ["artist:view-studio", "artist:edit-profile", "artist:upload"],
+  analyst: ["artist:view-studio", "artist:view-analytics"],
 };
 
 const labelMemberGrants: Record<LabelMemberRole, ArtistAction[]> = {
-  owner: ["artist:view-analytics", "artist:edit-profile", "artist:upload", "artist:submit-for-review", "artist:import-reports"],
-  admin: ["artist:view-analytics", "artist:upload", "artist:submit-for-review", "artist:import-reports"],
-  analyst: ["artist:view-analytics"],
+  owner: ["artist:view-studio", "artist:view-analytics", "artist:edit-profile", "artist:upload", "artist:submit-for-review", "artist:import-reports"],
+  admin: ["artist:view-studio", "artist:view-analytics", "artist:upload", "artist:submit-for-review", "artist:import-reports"],
+  analyst: ["artist:view-studio", "artist:view-analytics"],
 };
 
 export function isActive(actor: Actor | null | undefined): actor is Actor {

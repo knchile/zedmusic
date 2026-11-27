@@ -56,20 +56,24 @@ Integrity guarantees enforced by the database (covered by integration tests):
 * The same external report file cannot be imported twice for an artist.
 * `is_demo` flags on artists/releases/tracks; demo rows are excluded from charts and admin totals.
 
-## Upload pipeline (Phase 2)
+## Upload pipeline (implemented)
 
-1. Client asks `/api/uploads` for a presigned PUT URL (auth + `artist:upload` check, MIME/size validation, SHA-256 duplicate check). An `uploads` row is created as `pending`.
-2. Browser uploads directly to R2 with progress (XHR `upload.onprogress`).
-3. Client confirms; server `HEAD`s the object to verify size/type, extracts metadata (duration via `music-metadata` reading the first bytes with a ranged GET), marks `ready`.
-4. Artist fills metadata, confirms rights, submits → `music_submissions` (pending review) → admin approves → track `published`.
+1. Browser computes a streaming SHA-256 (audio only, `hash-wasm`, 4 MB chunks so phones don't run out of memory) and calls `POST /api/uploads` → checks `artist:upload` / `artist:edit-profile`, type/size policy (`src/lib/storage/policy.ts`), hourly rate limit, and duplicate recordings (same hash on a live track → 409, distinguishing own vs another artist's). Creates an `uploads` row (`pending`) and returns a presigned PUT URL bound to content type and size.
+2. Browser uploads **directly to storage** with progress (XHR). Large files never pass through Vercel functions.
+3. `POST /api/uploads/:id/complete` → `HEAD` the object (size must match), then inspect: audio via `music-metadata` over **byte-range reads** (`@tokenizer/range`), so a 200 MB WAV is never downloaded in full; images via `sharp` (artwork must be square ≥1000 px). Failed files are deleted and marked `failed`.
+4. Artist adds metadata (credits → `track_credits`, ISRC validation), confirms rights → `music_submissions` (stores the upload-terms version). Release and tracks become `pending_review` and are locked.
+5. Admin approves (release + tracks `published` atomically, artist notified, audit + moderation log, catalogue caches revalidated) or requests changes with a required note.
 
-Limits: MP3/AAC/WAV/FLAC, up to 200 MB per file (configurable). No transcoding in v1: MP3/AAC are streamed as uploaded; WAV/FLAC need a transcode worker (see Limitations).
+Limits: MP3, M4A/AAC, WAV, FLAC; 10 s – 4 h; ≤200 MB. No transcoding yet — originals are streamed (see Limitations).
 
-## Streaming (Phase 2–3)
+## Player (implemented)
 
-* `/api/play` validates the track is published, creates a `play_sessions` row and returns a short-lived presigned R2 GET URL (R2 honours `Range`, so seeking works on iOS/Android) plus the play-session id.
-* The player sends heartbeats with the session id. The server credits listening time bounded by wall-clock time since the previous heartbeat, so a client cannot claim 30 s after 2 s.
-* Qualification and caps are evaluated server-side using the active `stream_rule_sets` row (see `docs/STREAM-QUALIFICATION.md`).
+* One `HTMLAudioElement` owned by a module-level store (`src/components/player/store.ts`), mounted in the `(site)` layout, so playback survives client navigation. Pure queue logic (shuffle, repeat, previous) is in `queue.ts` and unit-tested.
+* `POST /api/play/:trackId` returns a 1-hour presigned GET URL (R2 honours `Range`, so seeking works on iOS/Android). URLs are refreshed automatically near expiry or after a network error, resuming from the same position.
+* Media Session API (lock-screen/headset controls), `playsInline` for iOS, autoplay-restriction handling, keyboard shortcuts (Space, Shift+N/P), queue persisted to `localStorage`.
+* Mobile: compact bar above the tab bar + full-screen player; desktop: bottom bar with queue panel and volume.
+
+## Streaming analytics (Phase 3)
 
 ## Charts (Phase 4)
 
@@ -77,6 +81,7 @@ Computed by a cron job from `track_daily_stats` for the closed period, with the 
 
 ## Known limitations
 
-* **Lossless uploads**: WAV/FLAC are large and not universally playable on iOS Safari (FLAC). A transcoding step (e.g. a small worker on Cloudflare/Fly using ffmpeg) is needed before accepting them for streaming; until then they'll be stored but streamed only if browser-compatible.
+* **No transcoding yet**: WAV/FLAC/high-bitrate files are streamed as uploaded. That works in modern browsers but costs listeners mobile data (a 4-minute WAV ≈ 40 MB). Recommended next step: an ffmpeg worker (Cloudflare Container/Fly.io/Railway, a few dollars a month) producing 128 kbps AAC + 256 kbps versions.
+* **Recently played** and popularity-ordered "top songs" depend on play sessions (Phase 3); artist pages currently order songs newest-first.
 * **Vercel plan**: Vercel Hobby is for non-commercial use and its cron runs at most daily. A commercial launch needs Vercel Pro.
 * **Cache Components**: unknown `/legal/*` slugs render the 404 page with `noindex` but an HTTP 200 (`dynamicParams` isn't available with Cache Components).

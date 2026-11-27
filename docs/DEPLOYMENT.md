@@ -18,34 +18,42 @@ Order: Neon → Resend → (R2) → Vercel → domain → first admin.
 
 Without email, users cannot confirm their accounts in production.
 
-## 3. Cloudflare R2 (needed from Phase 2)
+## 3. Cloudflare R2 (required for uploads and playback)
 
 1. Create buckets `zedmusic-audio` (private) and `zedmusic-media`.
 2. On `zedmusic-media`, connect custom domain `media.zedmusic.online` (requires the domain's DNS on Cloudflare, or use the R2 public dev URL temporarily).
 3. Create an R2 API token with Object Read & Write on both buckets → `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`; endpoint `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`.
-4. CORS on both buckets: allow `PUT, GET, HEAD` from `https://www.zedmusic.online` (and preview domains), expose `ETag, Content-Length, Content-Range, Accept-Ranges`.
+4. CORS on both buckets (browsers upload directly to R2):
+   ```json
+   [{ "AllowedOrigins": ["https://www.zedmusic.online", "https://zedmusic.online"],
+      "AllowedMethods": ["PUT", "GET", "HEAD"],
+      "AllowedHeaders": ["Content-Type"],
+      "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+      "MaxAgeSeconds": 3600 }]
+   ```
+   Add your Vercel preview domain if you test uploads on previews.
+5. Files that fail inspection are deleted immediately. Uploads that are started but never completed can leave orphaned objects; a cleanup job for these is planned with the scheduled jobs in Phase 3.
 
 ## 4. Vercel
 
 1. Import the GitHub repo. Framework preset: Next.js. Node 22.
 2. Add environment variables from `.env.example` (Production and Preview).
-3. Build command — run migrations before building:
-   ```
-   npm run db:migrate && npm run db:seed && npm run build
-   ```
-   Migrations are transactional and skip already-applied files; the seed only inserts missing reference rows. (For previews, point `DATABASE_URL*` at a Neon branch, not production.)
+3. Build: leave the build command empty — Vercel runs the `vercel-build` npm script (`scripts/vercel-build.ts`):
+   * **Production** builds apply migrations and reference data, then build. A failed migration fails the deploy.
+   * **Preview** builds never migrate unless `MIGRATE_ON_PREVIEW=1` (only set that together with a separate Neon preview branch).
+   * Previews use their own URL automatically (`VERCEL_BRANCH_URL`); set `NEXT_PUBLIC_APP_URL` for Production only.
+   * Function region: Frankfurt (`fra1`), next to the Neon database. Static and cached pages are still served from Vercel's edge, including Cape Town.
 4. Plan: Hobby is limited to non-commercial use and daily cron jobs. Use **Pro** for launch.
 
 ## 5. Domain: zedmusic.online
 
-In Vercel → Project → Settings → Domains add `www.zedmusic.online` (primary) and `zedmusic.online` (redirect to www). At your DNS provider:
+`zedmusic.online` was registered through Vercel and uses Vercel DNS (`ns1/ns2.vercel-dns.com`), so **no A/CNAME records need to be added by hand** — Vercel manages the apex and wildcard records automatically.
 
-| Type | Name | Value |
-|---|---|---|
-| A | `@` | `76.76.21.21` |
-| CNAME | `www` | `cname.vercel-dns.com` |
+1. In Vercel → Project → Settings → Domains add `www.zedmusic.online` (primary) and `zedmusic.online` (redirect to www).
+2. Add other services' records in Vercel → Domains → zedmusic.online → DNS Records: the Resend SPF/DKIM/DMARC records, and (if used) the `media` CNAME for the R2 public bucket.
+3. Set `NEXT_PUBLIC_APP_URL=https://www.zedmusic.online`.
 
-Vercel may show project-specific values — always use the exact records shown in the Domains screen. Keep the Resend records and the R2 `media` record alongside. Set `NEXT_PUBLIC_APP_URL=https://www.zedmusic.online`.
+If the DNS is ever moved to another provider, use the records Vercel shows in the project's Domains screen (typically A `@` → `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com`).
 
 ## 6. Google sign-in (optional)
 

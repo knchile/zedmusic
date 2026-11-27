@@ -86,10 +86,20 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 let cached: ServerEnv | undefined;
 
+/**
+ * On Vercel preview deployments NEXT_PUBLIC_APP_URL is usually unset; fall back to the
+ * deployment's own URL so auth callbacks and absolute links point at the preview.
+ */
+function withVercelUrl(source: Record<string, string | undefined>) {
+  if (source.NEXT_PUBLIC_APP_URL) return source;
+  const host = source.VERCEL_ENV === "production" ? source.VERCEL_PROJECT_PRODUCTION_URL : (source.VERCEL_BRANCH_URL ?? source.VERCEL_URL);
+  return host ? { ...source, NEXT_PUBLIC_APP_URL: `https://${host}` } : source;
+}
+
 /** Parse once per process. Throws with a readable message on malformed values. */
 export function getEnv(source: Record<string, string | undefined> = process.env): ServerEnv {
   if (cached && source === process.env) return cached;
-  const parsed = serverEnvSchema.safeParse(source);
+  const parsed = serverEnvSchema.safeParse(withVercelUrl(source));
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)

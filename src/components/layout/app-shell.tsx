@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
+import { PlayerProvider } from "@/components/player/player-ui";
 import { footerNav, siteConfig } from "@/lib/site";
 import { MobileTabBar, SidebarNav } from "./nav-links";
 import { UserNav, UserNavSkeleton } from "./user-nav";
 
 /**
- * Persistent application frame. Lives in the (site) layout so it — and, from
- * Phase 2, the audio player mounted here — survives client-side navigation.
+ * Persistent application frame. Lives in the (site) layout so it — and the audio
+ * player mounted here — survives client-side navigation.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
 
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r border-border bg-surface/60 px-4 py-6 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r border-border bg-surface/60 px-4 pt-6 pb-28 lg:flex">
         <Link href="/" className="px-2" aria-label={`${siteConfig.name} home`}>
           <Logo />
         </Link>
@@ -27,10 +28,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mt-auto grid gap-3 rounded-xl border border-border bg-surface-2 p-4">
           <p className="font-display text-sm font-semibold">Are you an artist?</p>
           <p className="text-xs leading-relaxed text-muted">
-            Create your account now. Artist profiles and uploads open in the next release.
+            Create your profile, upload your music and track how it performs.
           </p>
-          <Link href="/sign-up" className="text-xs font-semibold text-primary hover:underline">
-            Create an account →
+          <Link href="/studio" className="text-xs font-semibold text-primary hover:underline">
+            Open the artist studio →
           </Link>
         </div>
       </aside>
@@ -49,11 +50,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main id="main" className="flex-1 px-4 pt-6 pb-28 sm:px-6 lg:px-10 lg:pb-12">
+        <main id="main" className="flex-1 px-4 pt-6 pb-12 sm:px-6 lg:px-10">
           {children}
         </main>
 
-        <footer className="border-t border-border px-4 pt-8 pb-28 text-sm text-muted sm:px-6 lg:px-10 lg:pb-8">
+        {/* Bottom padding clears the mobile tab bar + mini player, and the desktop player bar. */}
+        <footer className="border-t border-border px-4 pt-8 pb-44 text-sm text-muted sm:px-6 lg:px-10 lg:pb-32">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="grid gap-2">
               <Logo />
@@ -77,6 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <MobileTabBar />
+      <PlayerProvider />
     </div>
   );
 }

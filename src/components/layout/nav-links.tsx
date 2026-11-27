@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { primaryNav } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { NavIcon } from "./nav-icon";
@@ -10,9 +11,23 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Desktop sidebar navigation. */
+/**
+ * usePathname() is request data on dynamic routes, so the active-state version
+ * streams in behind Suspense; the fallback renders the same links without highlight.
+ */
 export function SidebarNav() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<SidebarNavInner pathname="" />}>
+      <SidebarNavWithPath />
+    </Suspense>
+  );
+}
+
+function SidebarNavWithPath() {
+  return <SidebarNavInner pathname={usePathname()} />;
+}
+
+function SidebarNavInner({ pathname }: { pathname: string }) {
   return (
     <nav aria-label="Main" className="grid gap-1">
       {primaryNav.map((item) =>
@@ -50,8 +65,19 @@ export function SidebarNav() {
 
 /** Mobile bottom tab bar. Only shows destinations that exist. */
 export function MobileTabBar() {
-  const pathname = usePathname();
-  const items = primaryNav.filter((i) => !i.comingSoon);
+  return (
+    <Suspense fallback={<MobileTabBarInner pathname="" />}>
+      <MobileTabBarWithPath />
+    </Suspense>
+  );
+}
+
+function MobileTabBarWithPath() {
+  return <MobileTabBarInner pathname={usePathname()} />;
+}
+
+function MobileTabBarInner({ pathname }: { pathname: string }) {
+  const items = primaryNav.filter((i) => !i.comingSoon && !i.desktopOnly);
   return (
     <nav
       aria-label="Main"
