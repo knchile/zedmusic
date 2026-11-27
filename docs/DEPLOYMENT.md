@@ -38,11 +38,11 @@ Without email, users cannot confirm their accounts in production.
 
 1. Import the GitHub repo. Framework preset: Next.js. Node 22.
 2. Add environment variables from `.env.example` (Production and Preview).
-3. Build command — run migrations before building:
-   ```
-   npm run db:migrate && npm run db:seed && npm run build
-   ```
-   Migrations are transactional and skip already-applied files; the seed only inserts missing reference rows. (For previews, point `DATABASE_URL*` at a Neon branch, not production.)
+3. Build: leave the build command empty — Vercel runs the `vercel-build` npm script (`scripts/vercel-build.ts`):
+   * **Production** builds apply migrations and reference data, then build. A failed migration fails the deploy.
+   * **Preview** builds never migrate unless `MIGRATE_ON_PREVIEW=1` (only set that together with a separate Neon preview branch).
+   * Previews use their own URL automatically (`VERCEL_BRANCH_URL`); set `NEXT_PUBLIC_APP_URL` for Production only.
+   * Function region: Frankfurt (`fra1`), next to the Neon database. Static and cached pages are still served from Vercel's edge, including Cape Town.
 4. Plan: Hobby is limited to non-commercial use and daily cron jobs. Use **Pro** for launch.
 
 ## 5. Domain: zedmusic.online

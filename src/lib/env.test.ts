@@ -37,4 +37,10 @@ describe("env", () => {
   it("rejects malformed values with a readable message", () => {
     expect(() => getEnv({ NEXT_PUBLIC_APP_URL: "not a url" })).toThrow(/NEXT_PUBLIC_APP_URL/);
   });
+
+  it("falls back to the Vercel deployment URL when NEXT_PUBLIC_APP_URL is unset", () => {
+    expect(getEnv({ VERCEL_ENV: "preview", VERCEL_BRANCH_URL: "zm-git-x.vercel.app" }).NEXT_PUBLIC_APP_URL).toBe("https://zm-git-x.vercel.app");
+    expect(getEnv({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "www.zedmusic.online" }).NEXT_PUBLIC_APP_URL).toBe("https://www.zedmusic.online");
+    expect(getEnv({ VERCEL_URL: "x.vercel.app", NEXT_PUBLIC_APP_URL: "https://www.zedmusic.online" }).NEXT_PUBLIC_APP_URL).toBe("https://www.zedmusic.online");
+  });
 });
