@@ -47,14 +47,13 @@ Without email, users cannot confirm their accounts in production.
 
 ## 5. Domain: zedmusic.online
 
-In Vercel → Project → Settings → Domains add `www.zedmusic.online` (primary) and `zedmusic.online` (redirect to www). At your DNS provider:
+`zedmusic.online` was registered through Vercel and uses Vercel DNS (`ns1/ns2.vercel-dns.com`), so **no A/CNAME records need to be added by hand** — Vercel manages the apex and wildcard records automatically.
 
-| Type | Name | Value |
-|---|---|---|
-| A | `@` | `76.76.21.21` |
-| CNAME | `www` | `cname.vercel-dns.com` |
+1. In Vercel → Project → Settings → Domains add `www.zedmusic.online` (primary) and `zedmusic.online` (redirect to www).
+2. Add other services' records in Vercel → Domains → zedmusic.online → DNS Records: the Resend SPF/DKIM/DMARC records, and (if used) the `media` CNAME for the R2 public bucket.
+3. Set `NEXT_PUBLIC_APP_URL=https://www.zedmusic.online`.
 
-Vercel may show project-specific values — always use the exact records shown in the Domains screen. Keep the Resend records and the R2 `media` record alongside. Set `NEXT_PUBLIC_APP_URL=https://www.zedmusic.online`.
+If the DNS is ever moved to another provider, use the records Vercel shows in the project's Domains screen (typically A `@` → `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com`).
 
 ## 6. Google sign-in (optional)
 
