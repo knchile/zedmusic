@@ -55,6 +55,7 @@ npm run admin:grant -- you@example.com
 * [Stream qualification rules](docs/STREAM-QUALIFICATION.md)
 * [External integrations — what's possible per platform](docs/EXTERNAL-INTEGRATIONS.md)
 * [Deployment, services and DNS](docs/DEPLOYMENT.md)
+* [Confirmed decisions](docs/DECISIONS.md)
 
 ## Principles
 
